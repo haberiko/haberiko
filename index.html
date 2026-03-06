@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Haberiko</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f0f0f0;
+}
+
+header{
+background:#111;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+header h1{
+margin:0;
+font-size:36px;
+}
+
+header p{
+color:#ccc;
+}
+
+.breaking{
+background:red;
+color:white;
+padding:8px;
+text-align:center;
+font-weight:bold;
+}
+
+nav{
+background:#ffcc00;
+padding:10px;
+text-align:center;
+font-weight:bold;
+}
+
+nav span{
+margin:12px;
+}
+
+.container{
+width:1000px;
+margin:auto;
+margin-top:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
+
+.haber{
+background:white;
+padding:20px;
+border-radius:10px;
+}
+
+.kart{
+background:white;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+.editor{
+background:#fff3cd;
+padding:10px;
+margin-top:10px;
+border-left:5px solid orange;
+}
+
+textarea{
+width:100%;
+height:60px;
+margin-top:10px;
+}
+
+button{
+padding:8px 15px;
+background:black;
+color:white;
+border:none;
+cursor:pointer;
+margin-top:5px;
+}
+
+.comment{
+background:#eee;
+padding:8px;
+border-radius:6px;
+margin-top:6px;
+}
+
+footer{
+text-align:center;
+padding:20px;
+color:#777;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>📰 HABERIKO</h1>
+<p>Gerçek Üstü Haber Ajansı</p>
+<p><i>Mantık aramayın, biz de aramadık.</i></p>
+</header>
+
+<div class="breaking">
+SON DAKİKA: Kraliçe Kedi dış politika toplantısında 5 mama kabı tüketti.
+</div>
+
+<nav>
+<span>Gündem</span>
+<span>Bilim</span>
+<span>Saçmalık</span>
+<span>Kraliçe Kedi</span>
+</nav>
+
+<div class="container">
+
+<div class="grid">
+
+<div>
+
+<div class="haber">
+<h2>Yeni Haber Başlığı</h2>
+<p>Haber metni...</p>
+</div>
+
+<h2 id="baslik">Kraliçe Kedi Yanlışlıkla Dünya Lideri Seçildi</h2>
+
+<p id="icerik">
+Uluslararası seçim komitesinin yaptığı oylamada oy pusulasına yanlışlıkla
+eklenen turuncu bir kedi oyların büyük kısmını aldı.
+</p>
+
+<div class="editor">
+🦉 Baykuş Editör: Haberi yazarken biz de inanamadık.<br>
+🦝 Rakun Editör: Mantık arayanlar başka siteye gidebilir.
+</div>
+
+<button onclick="rastgeleHaber()">🎲 Rastgele Haber</button>
+
+<h3>💬 Yorumlar</h3>
+
+<div id="yorumlar">
+<div class="comment">MantikAvcisi99: Mantık aradım ama bulamadım.</div>
+</div>
+
+<textarea id="yorumText"></textarea>
+<button onclick="yorumEkle()">Yorum Gönder</button>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="kart">
+<h3>👑 Kraliçe Kedi Köşesi</h3>
+Bugünkü mesaj: Miyav.
+</div>
+
+<div class="kart">
+<h3>🔥 En Saçma Haberler</h3>
+• Yazılımcı 3 gün kod yazıp güneşe çıkmayı unuttu<br>
+• Martı simitçiyle kira sözleşmesi yaptı<br>
+• Yapay zeka kahve molası istedi
+</div>
+
+<div class="kart">
+<h3>🎭 Editörler</h3>
+🦉 Baykuş Editör<br>
+🦝 Rakun Editör<br>
+🐱 Kraliçe Kedi
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+© 2026 Haberiko
+</footer>
+
+<script>
+
+function yorumEkle(){
+
+let text=document.getElementById("yorumText").value;
+
+if(text=="") return;
+
+let yorum=document.createElement("div");
+
+yorum.className="comment";
+
+yorum.innerText=text;
+
+document.getElementById("yorumlar").appendChild(yorum);
+
+document.getElementById("yorumText").value="";
+
+}
+
+function rastgeleHaber(){
+
+let haberler=[
+["Mars'ta Çay Bahçesi Açıldı","Astronotlar moral için çay içmeye başladı."],
+["Kadıköy'de Martı Simitçiyle Kira Pazarlığı Yaptı","Martı ücretsiz beslenmeye rağmen resmi sözleşme istedi."],
+["Yazılımcı 20 Saat Kod Yazıp Yeni Tür Oldu","Arkadaşları onu 'Coder sapiens' olarak adlandırdı."],
+["Kraliçe Kedi Ekonomiyi Değerlendirdi","Toplantıda 3 kez miyavladı."]
+];
+
+let r=Math.floor(Math.random()*haberler.length);
+
+document.getElementById("baslik").innerText=haberler[r][0];
+
+document.getElementById("icerik").innerText=haberler[r][1];
+
+}
+
+</script>
+
+</body>
+</html>
