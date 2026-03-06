@@ -92,6 +92,7 @@ color:white;
 border:none;
 cursor:pointer;
 margin-top:5px;
+border-radius:6px;
 }
 
 .comment{
@@ -136,9 +137,8 @@ SON DAKİKA: Kraliçe Kedi dış politika toplantısında 5 mama kabı tüketti.
 <div>
 
 <div class="haber">
-<h2>Yeni Haber Başlığı</h2>
-<p>Haber metni...</p>
-</div>
+
+<img src="https://placekitten.com/800/400" style="width:100%; border-radius:10px;">
 
 <h2 id="baslik">Kraliçe Kedi Yanlışlıkla Dünya Lideri Seçildi</h2>
 
@@ -153,6 +153,12 @@ eklenen turuncu bir kedi oyların büyük kısmını aldı.
 </div>
 
 <button onclick="rastgeleHaber()">🎲 Rastgele Haber</button>
+<button onclick="sacmaHaberUret()">🧠 Saçma Haber Üret</button>
+
+<br><br>
+
+<button onclick="begen()">❤️ Haberi Beğen</button>
+<p>Beğeni: <span id="like">0</span></p>
 
 <h3>💬 Yorumlar</h3>
 
@@ -172,6 +178,11 @@ eklenen turuncu bir kedi oyların büyük kısmını aldı.
 <div class="kart">
 <h3>👑 Kraliçe Kedi Köşesi</h3>
 Bugünkü mesaj: Miyav.
+</div>
+
+<div class="kart">
+<h3>🏆 Haftanın En Saçma Haberi</h3>
+Üsküdar'da bir tost makinesi belediye başkanlığına aday oldu.
 </div>
 
 <div class="kart">
@@ -224,18 +235,4 @@ let haberler=[
 ["Mars'ta Çay Bahçesi Açıldı","Astronotlar moral için çay içmeye başladı."],
 ["Kadıköy'de Martı Simitçiyle Kira Pazarlığı Yaptı","Martı ücretsiz beslenmeye rağmen resmi sözleşme istedi."],
 ["Yazılımcı 20 Saat Kod Yazıp Yeni Tür Oldu","Arkadaşları onu 'Coder sapiens' olarak adlandırdı."],
-["Kraliçe Kedi Ekonomiyi Değerlendirdi","Toplantıda 3 kez miyavladı."]
-];
-
-let r=Math.floor(Math.random()*haberler.length);
-
-document.getElementById("baslik").innerText=haberler[r][0];
-
-document.getElementById("icerik").innerText=haberler[r][1];
-
-}
-
-</script>
-
-</body>
-</html>
+["Kraliçe Kedi Ekonomiyi Değerlendirdi","Topl]()
