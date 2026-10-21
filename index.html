@@ -97,6 +97,11 @@ button.liked{ background:#d6336c; }
   border-radius:6px;
   margin-top:6px;
 }
+.durum{
+  font-size:13px;
+  color:#a33;
+  margin-top:6px;
+}
 footer{
   text-align:center;
   padding:20px;
@@ -157,9 +162,11 @@ footer{
     <div id="yorumlar">
       <div class="comment">MantikAvcisi99: Mantık aradım ama bulamadım.</div>
     </div>
+    <div id="yorumlarCanli"></div>
 
-    <textarea id="yorumText" aria-label="Yorumunuz" placeholder="Yorumunuzu yazın..."></textarea>
+    <textarea id="yorumText" aria-label="Yorumunuz" placeholder="Yorumunuzu yazın..." maxlength="300"></textarea>
     <button onclick="yorumEkle()">Yorum Gönder</button>
+    <div id="durum" class="durum"></div>
 
   </div>
 </div>
@@ -167,7 +174,7 @@ footer{
 <div>
   <div class="kart">
     <h3>👑 Kraliçe Kedi Köşesi</h3>
-    Bugünkü mesaj: Uyuyun.
+    Bugünkü mesaj: Miyav.
   </div>
 
   <div class="kart">
@@ -186,6 +193,7 @@ footer{
     <h3>🎭 Editörler</h3>
     🦉 Baykuş Editör<br>
     🦝 Rakun Editör<br>
+    🐱 Kraliçe Kedi
   </div>
 </div>
 
@@ -196,7 +204,50 @@ footer{
   © 2026 Haberiko
 </footer>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, doc, onSnapshot, updateDoc,
+  increment, query, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+// =====================================================
+// 1) BURAYI KENDİ FIREBASE AYARLARINLA DEĞİŞTİR
+//    (Firebase konsolu > Proje ayarları > Web uygulaman)
+// =====================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDNTo725gimkqN5Y7bw43QJguIsX5rCBjI",
+  authDomain: "haberiko.firebaseapp.com",
+  projectId: "haberiko",
+  storageBucket: "haberiko.firebasestorage.app",
+  messagingSenderId: "691042114621",
+  appId: "1:691042114621:web:8acf94a03e38d5bfdd5e54"
+};
+
+const ayarlandi = firebaseConfig.projectId !== "BURAYA";
+// (Ayarlar dolduruldu: projectId artık "haberiko")
+
+// ---------- Küçük yardımcılar ----------
+function durumYaz(mesaj){
+  document.getElementById("durum").innerText = mesaj;
+}
+
+function oku(anahtar, varsayilan){
+  try{
+    const ham = localStorage.getItem(anahtar);
+    return ham === null ? varsayilan : JSON.parse(ham);
+  }catch(e){
+    return varsayilan;
+  }
+}
+
+function kaydet(anahtar, deger){
+  try{
+    localStorage.setItem(anahtar, JSON.stringify(deger));
+  }catch(e){}
+}
+
+// ---------- Rastgele / saçma haber (veritabanı gerekmez) ----------
 const haberler = [
   ["Mars'ta Çay Bahçesi Açıldı", "Astronotlar moral için çay içmeye başladı."],
   ["Kadıköy'de Martı Simitçiyle Kira Pazarlığı Yaptı", "Martı ücretsiz beslenmeye rağmen resmi sözleşme istedi."],
@@ -226,76 +277,112 @@ function haberiGoster(baslik, icerik){
   document.getElementById("icerik").innerText = icerik;
 }
 
-function rastgeleHaber(){
+window.rastgeleHaber = function(){
   const [baslik, icerik] = pick(haberler);
   haberiGoster(baslik, icerik);
-}
+};
 
-function sacmaHaberUret(){
+window.sacmaHaberUret = function(){
   const baslik = pick(ozneler) + " " + pick(yerler) + " " + pick(eylemler);
   haberiGoster(baslik, pick(aciklamalar));
-}
+};
 
-// ---------- Kalıcı veri (localStorage) ----------
-function oku(anahtar, varsayilan){
-  try{
-    const ham = localStorage.getItem(anahtar);
-    return ham === null ? varsayilan : JSON.parse(ham);
-  }catch(e){
-    return varsayilan;
-  }
-}
-
-function kaydet(anahtar, deger){
-  try{
-    localStorage.setItem(anahtar, JSON.stringify(deger));
-  }catch(e){
-    // Depolama kapalıysa sessizce devam et
-  }
-}
-
-// ---------- Beğeni ----------
-let begeni = oku("haberiko_begeni", 0);
+// ---------- Beğeni ve yorumlar (Firestore) ----------
+let db = null;
 let begenildi = oku("haberiko_begenildi", false);
 
-function begeniyiGoster(){
-  document.getElementById("like").innerText = begeni;
+function begenDugmesiniBoya(){
   document.getElementById("begenBtn").classList.toggle("liked", begenildi);
 }
+begenDugmesiniBoya();
 
-function begen(){
-  begenildi = !begenildi;
-  begeni += begenildi ? 1 : -1;
-  kaydet("haberiko_begeni", begeni);
-  kaydet("haberiko_begenildi", begenildi);
-  begeniyiGoster();
+if(ayarlandi){
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+
+  // Beğeni sayısını canlı dinle: biri beğenince herkesin ekranında güncellenir
+  onSnapshot(doc(db, "stats", "haber1"), (snap) => {
+    const sayi = snap.exists() ? snap.data().likes : 0;
+    document.getElementById("like").innerText = sayi;
+  }, (hata) => {
+    console.error(hata);
+    durumYaz("Beğeni sayısı okunamadı.");
+  });
+
+  // Son 50 yorumu canlı dinle (en yeni en üstte)
+  const yorumSorgusu = query(
+    collection(db, "comments"),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
+
+  onSnapshot(yorumSorgusu, (snap) => {
+    const kutu = document.getElementById("yorumlarCanli");
+    kutu.innerHTML = "";
+    snap.forEach((d) => {
+      const yorum = document.createElement("div");
+      yorum.className = "comment";
+      yorum.textContent = "Ziyaretçi: " + d.data().text;
+      kutu.appendChild(yorum);
+    });
+  }, (hata) => {
+    console.error(hata);
+    durumYaz("Yorumlar okunamadı.");
+  });
+}else{
+  durumYaz("Firebase ayarları henüz girilmedi: beğeni ve yorumlar kapalı.");
 }
 
-// ---------- Yorumlar ----------
-let yorumListesi = oku("haberiko_yorumlar", []);
+window.begen = async function(){
+  if(!db){
+    durumYaz("Firebase ayarları henüz girilmedi.");
+    return;
+  }
+  const yeniDurum = !begenildi;
+  try{
+    await updateDoc(doc(db, "stats", "haber1"), {
+      likes: increment(yeniDurum ? 1 : -1)
+    });
+    begenildi = yeniDurum;
+    kaydet("haberiko_begenildi", begenildi);
+    begenDugmesiniBoya();
+    durumYaz("");
+  }catch(e){
+    console.error(e);
+    durumYaz("Beğeni kaydedilemedi.");
+  }
+};
 
-function yorumuEkranaEkle(metin){
-  const yorum = document.createElement("div");
-  yorum.className = "comment";
-  yorum.innerText = metin;
-  document.getElementById("yorumlar").appendChild(yorum);
-}
+let sonYorumZamani = 0;
 
-function yorumEkle(){
+window.yorumEkle = async function(){
+  if(!db){
+    durumYaz("Firebase ayarları henüz girilmedi.");
+    return;
+  }
   const alan = document.getElementById("yorumText");
   const text = alan.value.trim();
   if(text === "") return;
 
-  const metin = "Ziyaretçi: " + text;
-  yorumListesi.push(metin);
-  kaydet("haberiko_yorumlar", yorumListesi);
-  yorumuEkranaEkle(metin);
-  alan.value = "";
-}
+  // Basit spam freni: 10 saniyede en fazla 1 yorum
+  if(Date.now() - sonYorumZamani < 10000){
+    durumYaz("Biraz bekleyip tekrar dene.");
+    return;
+  }
 
-// ---------- Sayfa açılınca kayıtlıları yükle ----------
-begeniyiGoster();
-yorumListesi.forEach(yorumuEkranaEkle);
+  try{
+    await addDoc(collection(db, "comments"), {
+      text: text.slice(0, 300),
+      createdAt: serverTimestamp()
+    });
+    sonYorumZamani = Date.now();
+    alan.value = "";
+    durumYaz("");
+  }catch(e){
+    console.error(e);
+    durumYaz("Yorum gönderilemedi.");
+  }
+};
 </script>
 
 </body>
