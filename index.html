@@ -167,7 +167,7 @@ footer{
 <div>
   <div class="kart">
     <h3>👑 Kraliçe Kedi Köşesi</h3>
-    Bugünkü mesaj: Miyav.
+    Bugünkü mesaj: Uyuyun.
   </div>
 
   <div class="kart">
@@ -186,7 +186,6 @@ footer{
     <h3>🎭 Editörler</h3>
     🦉 Baykuş Editör<br>
     🦝 Rakun Editör<br>
-    🐱 Kraliçe Kedi
   </div>
 </div>
 
@@ -237,14 +236,49 @@ function sacmaHaberUret(){
   haberiGoster(baslik, pick(aciklamalar));
 }
 
-let begeni = 0;
-let begenildi = false;
+// ---------- Kalıcı veri (localStorage) ----------
+function oku(anahtar, varsayilan){
+  try{
+    const ham = localStorage.getItem(anahtar);
+    return ham === null ? varsayilan : JSON.parse(ham);
+  }catch(e){
+    return varsayilan;
+  }
+}
+
+function kaydet(anahtar, deger){
+  try{
+    localStorage.setItem(anahtar, JSON.stringify(deger));
+  }catch(e){
+    // Depolama kapalıysa sessizce devam et
+  }
+}
+
+// ---------- Beğeni ----------
+let begeni = oku("haberiko_begeni", 0);
+let begenildi = oku("haberiko_begenildi", false);
+
+function begeniyiGoster(){
+  document.getElementById("like").innerText = begeni;
+  document.getElementById("begenBtn").classList.toggle("liked", begenildi);
+}
 
 function begen(){
   begenildi = !begenildi;
   begeni += begenildi ? 1 : -1;
-  document.getElementById("like").innerText = begeni;
-  document.getElementById("begenBtn").classList.toggle("liked", begenildi);
+  kaydet("haberiko_begeni", begeni);
+  kaydet("haberiko_begenildi", begenildi);
+  begeniyiGoster();
+}
+
+// ---------- Yorumlar ----------
+let yorumListesi = oku("haberiko_yorumlar", []);
+
+function yorumuEkranaEkle(metin){
+  const yorum = document.createElement("div");
+  yorum.className = "comment";
+  yorum.innerText = metin;
+  document.getElementById("yorumlar").appendChild(yorum);
 }
 
 function yorumEkle(){
@@ -252,13 +286,16 @@ function yorumEkle(){
   const text = alan.value.trim();
   if(text === "") return;
 
-  const yorum = document.createElement("div");
-  yorum.className = "comment";
-  yorum.innerText = "Ziyaretçi: " + text;
-
-  document.getElementById("yorumlar").appendChild(yorum);
+  const metin = "Ziyaretçi: " + text;
+  yorumListesi.push(metin);
+  kaydet("haberiko_yorumlar", yorumListesi);
+  yorumuEkranaEkle(metin);
   alan.value = "";
 }
+
+// ---------- Sayfa açılınca kayıtlıları yükle ----------
+begeniyiGoster();
+yorumListesi.forEach(yorumuEkranaEkle);
 </script>
 
 </body>
